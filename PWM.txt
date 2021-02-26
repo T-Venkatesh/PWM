@@ -1,0 +1,56 @@
+`timescale 1ns / 1ps
+ 
+//PWM is a way of digitally encoding analog signal levels
+module pwm(
+    input clk,start,
+    output dout
+    );
+reg slclk =0;
+integer count=0;
+ //Routine for generation of the slower clock   
+always@(posedge clk) begin
+if (count < 10)
+   count <= count + 1;
+else begin
+  count <= 0; 
+  slclk <= ~slclk;
+end
+end      
+/////Routine for generation of the PWM 
+reg next = 0;
+parameter max_period = 5000; //Total period of pulse
+integer step = 0;
+ 
+always@(posedge slclk) begin
+    if(next == 1) begin
+      if (step < max_period)
+           step <= step + 20; ///Increase in the step for next period
+       else
+           step <= 0;
+     end
+end       
+ 
+integer i=0;
+reg dt=0;
+ 
+ 
+always@(posedge slclk)  begin     
+      if(i <= step) begin
+        i <= i + 1;
+        dt <= 1;
+        next <= 0;
+       end
+    else if (i > step && i < max_period) begin
+        dt <= 0;
+        i <= i + 1; 
+        next <= 0;
+     end
+    else begin
+        next <= 1;
+        i <= 0;
+     end         
+end
+ 
+    
+assign dout = dt;    
+endmodule
